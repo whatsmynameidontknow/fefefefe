@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login</title>
+        <script src="assets/js/auth.js"></script>
+    </head>
+    <body>
+        <h1>Login</h1>
+        <form id="loginForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required />
+            <br />
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required />
+            <br />
+            <button type="submit">Login</button>
+        </form>
+        <span id="login-status"></span>
+        <script>
+            const loginStatus = document.querySelector('#login-status');
+            document
+                .getElementById('loginForm')
+                .addEventListener('submit', async function (event) {
+                    event.preventDefault();
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    const isLoginOK = await login(email, password);
+                    if (isLoginOK) {
+                        loginStatus.innerText = 'Login Successful!';
+                        loginStatus.style.color = 'green';
+                        window.location.href = '/employees';
+                    } else {
+                        loginStatus.innerText = 'Login Failed!';
+                        loginStatus.style.color = 'red';
+                    }
+                });
+        </script>
+    </body>
+</html>

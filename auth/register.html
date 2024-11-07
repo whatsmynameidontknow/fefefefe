@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Register</title>
+        <script src="assets/js/auth.js"></script>
+    </head>
+    <body>
+        <form id="registerForm">
+            <label for="first-name">First Name:</label>
+            <input
+                type="text"
+                id="first-name"
+                name="first-name"
+                required
+            /><br /><br />
+
+            <label for="last-name">Last Name:</label>
+            <input
+                type="text"
+                id="last-name"
+                name="last-name"
+                required
+            /><br /><br />
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required /><br /><br />
+
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone" required /><br /><br />
+
+            <label for="job-list">Job:</label>
+            <select name="" id="job-list"></select>
+
+            <label for="department-list">Department:</label>
+            <select name="" id="department-list"></select
+            ><br />
+            <br />
+
+            <label for="hire-date">Hire Date:</label>
+            <input
+                type="date"
+                id="hire-date"
+                name="hire-date"
+                required
+            /><br /><br />
+
+            <label for="password">Password:</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                required
+            /><br /><br />
+
+            <input type="submit" value="Register" />
+        </form>
+
+        <div id="register-status"></div>
+        <script>
+            document.addEventListener('DOMContentLoaded', async () => {
+                const jobList = document.querySelector('#job-list');
+                let resp = await getAllJobs();
+                const jobs = resp.content;
+                jobs.forEach((job) => {
+                    const jobOption = document.createElement('option');
+                    jobOption.value = job.job_id;
+                    jobOption.innerText = job.job_title;
+                    jobList.appendChild(jobOption);
+                });
+
+                const departmentList =
+                    document.querySelector('#department-list');
+                resp = await getAllDepartments();
+                const departments = resp.content;
+                departments.forEach((department) => {
+                    const departmentOption = document.createElement('option');
+                    departmentOption.value = department.department_id;
+                    departmentOption.innerText = department.department_name;
+                    departmentList.appendChild(departmentOption);
+                });
+            });
+            document
+                .querySelector('#registerForm')
+                .addEventListener('submit', async (e) => {
+                    const registerStatus =
+                        document.querySelector('#register-status');
+                    e.preventDefault();
+                    const firstName =
+                        document.querySelector('#first-name').value;
+                    const lastName = document.querySelector('#last-name').value;
+                    const email = document.querySelector('#email').value;
+                    const phoneNumber = document.querySelector('#phone').value;
+                    const jobId = document.querySelector('#job-list').value;
+                    const departmentId =
+                        document.querySelector('#department-list').value;
+                    const hireDate = document.querySelector('#hire-date').value;
+                    const password = document.querySelector('#password').value;
+
+                    const employee = {
+                        first_name: firstName,
+                        last_name: lastName,
+                        email,
+                        phone_number: phoneNumber,
+                        job_id: jobId,
+                        hire_date: hireDate,
+                        department_id: departmentId,
+                        password,
+                    };
+                    if (await register(employee)) {
+                        registerStatus.innerText = 'registration successful!';
+                        registerStatus.style.color = 'green';
+                        window.location.href = '/employees/index.html';
+                    } else {
+                        registerStatus.innerText = 'registration failed!';
+                        registerStatus.style.color = 'red';
+                    }
+                });
+        </script>
+    </body>
+</html>
