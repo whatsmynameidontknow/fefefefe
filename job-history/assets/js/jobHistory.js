@@ -1,5 +1,3 @@
-const checkLocalStorage = () => localStorage != null;
-
 let dataTable;
 const initDataTable = () => {
     dataTable = new DataTable('#job-history-table', {
@@ -13,47 +11,6 @@ const initDataTable = () => {
 };
 
 initDataTable();
-
-const getToken = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage not available!');
-    }
-    return localStorage.getItem('token');
-};
-
-const redirectUnauthenticated = () => {
-    if (getToken() == null || getToken() == '') {
-        window.location.href = '/auth/login.html';
-    }
-};
-
-const BASE_API_URL = 'http://localhost:8080';
-const BASE_EMPLOYEE_URL = `${BASE_API_URL}/employees`;
-const headers = {
-    Authorization: 'Bearer ' + getToken(),
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-};
-
-const jobHistoryContainer = document.querySelector('#job-history-container');
-
-const getJobHistoryByEmployeeId = async (employee_id) => {
-    const response = await fetch(
-        `${BASE_EMPLOYEE_URL}/${employee_id}?include_job_history=true`,
-        {
-            headers: headers,
-        }
-    );
-    return await response.json();
-};
-
-const logout = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage unavailable!');
-    }
-    localStorage.removeItem('token');
-    window.location.href = '/auth/login.html';
-};
 
 const renderJobHistory = (
     parentNode,
@@ -82,3 +39,5 @@ const renderJobHistory = (
     });
     dataTable.draw();
 };
+
+export { renderJobHistory };

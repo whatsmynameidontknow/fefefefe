@@ -1,5 +1,9 @@
-const checkLocalStorage = () => localStorage != null;
-
+import {
+    deleteJob,
+    getAllJobs,
+    getJob,
+    updateJob,
+} from '../../../assets/js/api.js';
 let dataTable;
 const initDataTable = () => {
     dataTable = new DataTable('#jobs-table', {
@@ -13,82 +17,7 @@ const initDataTable = () => {
 
 initDataTable();
 
-const getToken = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage not available!');
-    }
-    return localStorage.getItem('token');
-};
-
-const redirectUnauthenticated = () => {
-    if (getToken() == null || getToken() == '') {
-        window.location.href = '/auth/login.html';
-    }
-};
-
-const BASE_API_URL = 'http://localhost:8080';
-const BASE_JOBS_URL = `${BASE_API_URL}/jobs`;
-const headers = {
-    Authorization: 'Bearer ' + getToken(),
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-};
-
 const jobsContainer = document.querySelector('#jobs-container');
-
-const getAllJobs = async () => {
-    const response = await fetch(`${BASE_JOBS_URL}`, {
-        headers: headers,
-    });
-    if (response.ok) {
-        return (await response.json()).content;
-    }
-
-    return [];
-};
-
-const deleteJob = async (id) => {
-    const response = await fetch(`${BASE_JOBS_URL}/${id}`, {
-        method: 'DELETE',
-        headers: headers,
-    });
-
-    return await response.json();
-};
-
-const getJob = async (id) => {
-    const response = await fetch(`${BASE_JOBS_URL}/${id}`, {
-        headers: headers,
-    });
-
-    return await response.json();
-};
-
-const updateJob = async (newData) => {
-    const response = await fetch(`${BASE_JOBS_URL}/${newData.job_id}`, {
-        headers: headers,
-        body: JSON.stringify(newData),
-        method: 'PATCH',
-    });
-    return await response.json();
-};
-
-const createJob = async (data) => {
-    const response = await fetch(BASE_JOBS_URL, {
-        headers: headers,
-        method: 'POST',
-        body: JSON.stringify(data),
-    });
-    return await response.json();
-};
-
-const logout = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage unavailable!');
-    }
-    localStorage.removeItem('token');
-    window.location.href = '/auth/login.html';
-};
 
 const renderJobs = (parentNode, jobs = [], filterFunc = (job) => true) => {
     parentNode.innerHTML = '';
@@ -188,13 +117,13 @@ const renderJobDetail = async (parentNode, data) => {
     deleteBtn.addEventListener('click', async () => {
         if (window.confirm('Are you sure?')) {
             const res = await deleteJob(job.job_id);
-            const toast = createToast({
+            showToast({
                 label: 'Delete job',
-                msg: res.info.detailed_message,
-            });
-            document.body.appendChild(toast);
-            $(function () {
-                bootstrap.Toast.getOrCreateInstance(toast).show();
+                msg:
+                    res.info.detailed_message ??
+                    (res.info.status > 299
+                        ? 'Failed to perform operation!'
+                        : ''),
             });
             $(function () {
                 $('#job-modal').modal('toggle');
@@ -221,12 +150,17 @@ const renderJobDetail = async (parentNode, data) => {
     parentNode.append(jobTable);
 };
 
-const createToast = ({ label, msg }) => {
-    const toast = document.createElement('div');
+const showToast = ({ label, msg }) => {
+    let toast;
+    toast = document.querySelector('#job-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+    }
     toast.classList.add('toast', 'position-absolute');
     toast.style.bottom = '8%';
     toast.style.right = '5%';
     toast.id = 'job-toast';
+    toast.style.zIndex = 999999;
     toast.setAttribute('role', 'alert');
     toast.setAttribute('aria-live', 'assertive');
     toast.setAttribute('aria-atomice', 'true');
@@ -237,7 +171,10 @@ const createToast = ({ label, msg }) => {
   <div class="toast-body">
     ${msg}
   </div>`;
-    return toast;
+    document.body.appendChild(toast);
+    $(function () {
+        bootstrap.Toast.getOrCreateInstance(toast).show();
+    });
 };
 
 const renderJobForm = async (
@@ -291,6 +228,7 @@ const renderJobForm = async (
     minSalaryLabel.innerText = 'Minimum Salary';
     const minSalaryInput = document.createElement('input');
     minSalaryInput.type = 'number';
+    minSalaryInput.required = true;
     minSalaryInput.min = 0;
     minSalaryInput.classList.add('form-control');
     minSalaryInput.id = 'min_salary';
@@ -306,6 +244,7 @@ const renderJobForm = async (
     maxSalaryLabel.innerText = 'Maximum Salary';
     const maxSalaryInput = document.createElement('input');
     maxSalaryInput.type = 'number';
+    maxSalaryInput.required = true;
     maxSalaryInput.min = 0;
     maxSalaryInput.classList.add('form-control');
     maxSalaryInput.id = 'max_salary';
@@ -327,16 +266,21 @@ const renderJobForm = async (
             form.reportValidity();
             return;
         }
+        if (parseInt(maxSalaryInput.value) < parseInt(minSalaryInput.value)) {
+            showToast({
+                label: 'Create Job',
+                msg: "Max salary can't be less than min salary!",
+            });
+            return;
+        }
         job = collectFormData(form, job);
         const res = await okFunc(job);
-        const toast = createToast({
+        console.log(JSON.stringify(res));
+        showToast({
             label: label,
-            msg: res.info.detailed_message,
-        });
-        document.body.appendChild(toast);
-        document.body.appendChild(toast);
-        $(function () {
-            bootstrap.Toast.getOrCreateInstance(toast).show();
+            msg:
+                res.info.detailed_message ??
+                (res.info.status > 299 ? 'Failed to perform operation!' : ''),
         });
         $(function () {
             $('#job-modal').modal('toggle');
@@ -358,11 +302,13 @@ const renderJobForm = async (
 };
 
 const collectFormData = (form, old) => {
-    try {
+    if (form.job_id) {
         old.job_id = form.job_id.value;
-    } catch (e) {}
+    }
     old.job_title = form.job_title.value;
     old.min_salary = form.min_salary.value;
     old.max_salary = form.max_salary.value;
     return old;
 };
+
+export { renderJobForm, renderJobs };

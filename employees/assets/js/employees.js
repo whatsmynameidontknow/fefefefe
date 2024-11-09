@@ -1,6 +1,14 @@
-const checkLocalStorage = () => localStorage != null;
+import {
+    deleteEmployee,
+    getAllDepartments,
+    getAllEmployees,
+    getAllJobs,
+    getEmployee,
+    updateEmployee,
+} from '../../../assets/js/api.js';
 
 let dataTable;
+
 const initDataTable = () => {
     dataTable = new DataTable('#employees-table', {
         pageLength: 5,
@@ -13,90 +21,7 @@ const initDataTable = () => {
 
 initDataTable();
 
-const getToken = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage not available!');
-    }
-    return localStorage.getItem('token');
-};
-
-const redirectUnauthenticated = () => {
-    if (getToken() == null || getToken() == '') {
-        window.location.href = '/auth/login.html';
-    }
-};
-
-const BASE_API_URL = 'http://localhost:8080';
-const BASE_EMPLOYEES_URL = `${BASE_API_URL}/employees`;
-const headers = {
-    Authorization: 'Bearer ' + getToken(),
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-};
-
 const employeesContainer = document.querySelector('#employees-container');
-
-const getAllEmployees = async () => {
-    const response = await fetch(`${BASE_EMPLOYEES_URL}`, {
-        headers: headers,
-    });
-    if (response.ok) {
-        return (await response.json()).content;
-    }
-
-    return [];
-};
-
-const deleteEmployee = async (id) => {
-    const response = await fetch(`${BASE_EMPLOYEES_URL}/${id}`, {
-        method: 'DELETE',
-        headers: headers,
-    });
-
-    return await response.json();
-};
-
-const getEmployee = async (id) => {
-    const response = await fetch(`${BASE_EMPLOYEES_URL}/${id}`, {
-        headers: headers,
-    });
-
-    return await response.json();
-};
-
-const updateEmployee = async (newData) => {
-    const response = await fetch(
-        `${BASE_EMPLOYEES_URL}/${newData.employee_id}`,
-        {
-            headers: headers,
-            body: JSON.stringify(newData),
-            method: 'PATCH',
-        }
-    );
-    return await response.json();
-};
-
-class Pagination {
-    data;
-    perPage;
-    constructor(data, perPage) {
-        this.data = data;
-        this.perPage = perPage;
-    }
-
-    getPage(pageNum) {
-        const start = this.perPage * (pageNum - 1);
-        if (start > this.data.length || start < 0) {
-            throw new Error('invalid page');
-        }
-        const end = Math.min(start + this.perPage, this.data.length);
-        return this.data.slice(start, end);
-    }
-
-    getTotaLpage() {
-        return Math.floor(this.data.length / this.perPage);
-    }
-}
 
 const renderEmployees = (
     parentNode,
@@ -396,8 +321,7 @@ const renderUpdateForm = async (employee = {}) => {
     const jobSelect = document.createElement('select');
     jobSelect.classList.add('form-select');
     jobSelect.id = 'job';
-    let response = await getAllJobs();
-    const jobs = response.content;
+    let jobs = await getAllJobs();
     jobs.forEach((job) => {
         const jobOption = document.createElement('option');
         jobOption.value = job.job_id;
@@ -418,8 +342,7 @@ const renderUpdateForm = async (employee = {}) => {
     const departmentSelect = document.createElement('select');
     departmentSelect.classList.add('form-select');
     departmentSelect.id = 'department';
-    response = await getAllDepartments();
-    const departments = response.content;
+    const departments = await getAllDepartments();
     departments.forEach((department) => {
         const departmentOption = document.createElement('option');
         departmentOption.value = department.department_id;
@@ -546,22 +469,4 @@ const collectFormData = (form, old) => {
     return old;
 };
 
-const BASE_JOBS_URL = `${BASE_API_URL}/jobs`;
-const getAllJobs = async () => {
-    const response = await fetch(BASE_JOBS_URL);
-    return await response.json();
-};
-
-const BASE_DEPARTMENTS_URL = `${BASE_API_URL}/departments`;
-const getAllDepartments = async () => {
-    const response = await fetch(BASE_DEPARTMENTS_URL);
-    return await response.json();
-};
-
-const logout = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage unavailable!');
-    }
-    localStorage.removeItem('token');
-    window.location.href = '/auth/login.html';
-};
+export { renderEmployees };

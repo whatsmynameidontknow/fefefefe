@@ -31,7 +31,6 @@
                         class="btn btn-danger"
                         type="button"
                         id="logout-btn"
-                        onclick="logout()"
                     >
                         Logout
                     </button>
@@ -102,17 +101,24 @@
             referrerpolicy="no-referrer"
         ></script>
         <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
-        <script src="assets/js/employees.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                redirectUnauthenticated();
-            });
+        <script type="module">
+            import { renderEmployees } from './assets/js/employees.js';
+            import { getAllEmployees } from '../../../assets/js/api.js';
+            import {
+                redirectUnauthenticated,
+                logout,
+            } from '../auth/assets/js/auth.js';
             document.addEventListener('DOMContentLoaded', async () => {
                 const employees = await getAllEmployees();
                 const employeesContainer = document.querySelector(
                     '#employees-container'
                 );
                 renderEmployees(employeesContainer, employees);
+            });
+            document.addEventListener('DOMContentLoaded', () => {
+                const logoutBtn = document.querySelector('#logout-btn');
+                logoutBtn.addEventListener('click', logout);
+                redirectUnauthenticated();
             });
         </script>
     </body>

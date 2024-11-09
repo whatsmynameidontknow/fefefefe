@@ -61,8 +61,10 @@
             referrerpolicy="no-referrer"
         ></script>
         <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
-        <script src="assets/js/jobHistory.js"></script>
-        <script>
+        <script type="module">
+            import { renderJobHistory } from './assets/js/jobHistory.js';
+            import { redirectUnauthenticated } from '../auth/assets/js/auth.js';
+            import { getEmployee } from '../../../assets/js/api.js';
             document.addEventListener('DOMContentLoaded', () => {
                 redirectUnauthenticated();
             });
@@ -70,7 +72,7 @@
                 const queryParams = new URLSearchParams(window.location.search);
                 const employeeId = queryParams.get('employee_id');
                 const employeeName = document.querySelector('#employee-name');
-                const data = await getJobHistoryByEmployeeId(employeeId);
+                const data = await getEmployee(employeeId, true);
                 if (data.info.status === 404) {
                     window.location.href = '/404.html';
                     return;

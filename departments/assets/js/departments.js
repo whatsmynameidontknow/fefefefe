@@ -1,4 +1,10 @@
-const checkLocalStorage = () => localStorage != null;
+import {
+    deleteDepartment,
+    getAllDepartments,
+    getAllEmployees,
+    getDepartment,
+    updateDepartment,
+} from '../../../assets/js/api.js';
 
 let dataTable;
 const initDataTable = () => {
@@ -13,92 +19,7 @@ const initDataTable = () => {
 
 initDataTable();
 
-const getToken = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage not available!');
-    }
-    return localStorage.getItem('token');
-};
-
-const redirectUnauthenticated = () => {
-    if (getToken() == null || getToken() == '') {
-        window.location.href = '/auth/login.html';
-    }
-};
-
-const BASE_API_URL = 'http://localhost:8080';
-const BASE_DEPARTMENTS_URL = `${BASE_API_URL}/departments`;
-const BASE_EMPLOYEES_URL = `${BASE_API_URL}/employees`;
-const headers = {
-    Authorization: 'Bearer ' + getToken(),
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-};
-
 const departmentsContainer = document.querySelector('#departments-container');
-
-const getAllEmployees = async () => {
-    const response = await fetch(BASE_EMPLOYEES_URL, { headers: headers });
-    return await response.json();
-};
-
-const getAllDepartments = async () => {
-    const response = await fetch(`${BASE_DEPARTMENTS_URL}`, {
-        headers: headers,
-    });
-    if (response.ok) {
-        return (await response.json()).content;
-    }
-
-    return [];
-};
-
-const deleteDepartment = async (id) => {
-    const response = await fetch(`${BASE_DEPARTMENTS_URL}/${id}`, {
-        method: 'DELETE',
-        headers: headers,
-    });
-
-    return await response.json();
-};
-
-const getDepartment = async (id) => {
-    const response = await fetch(`${BASE_DEPARTMENTS_URL}/${id}`, {
-        headers: headers,
-    });
-
-    return await response.json();
-};
-
-const updateDepartment = async (newData) => {
-    const response = await fetch(
-        `${BASE_DEPARTMENTS_URL}/${newData.department_id}`,
-        {
-            headers: headers,
-            body: JSON.stringify(newData),
-            method: 'PATCH',
-        }
-    );
-    return await response.json();
-};
-
-const createDepartment = async (data) => {
-    const response = await fetch(BASE_DEPARTMENTS_URL, {
-        headers: headers,
-        method: 'POST',
-        body: JSON.stringify(data),
-    });
-    return await response.json();
-    // return null;
-};
-
-const logout = () => {
-    if (!checkLocalStorage()) {
-        throw new Error('local storage unavailable!');
-    }
-    localStorage.removeItem('token');
-    window.location.href = '/auth/login.html';
-};
 
 const renderDepartments = (
     parentNode,
@@ -300,13 +221,6 @@ const renderDepartmentForm = async (
     managerLabel.setAttribute('for', 'manager_id');
     managerLabel.classList.add('form-label');
     managerLabel.innerText = 'Manager ID';
-    // const managerIdInput = document.createElement('input');
-    // managerIdInput.type = 'number';
-    // managerIdInput.min = 0;
-    // managerIdInput.classList.add('form-control');
-    // managerIdInput.id = 'manager_id';
-    // managerIdInput.name = 'manager_id';
-    // managerIdInput.value = department.manager_id ?? '';
     const managerSelect = document.createElement('select');
     const noManager = document.createElement('option');
     noManager.innerText = 'No Manager';
@@ -314,8 +228,7 @@ const renderDepartmentForm = async (
     managerSelect.id = 'manager_id';
     managerSelect.appendChild(noManager);
     managerSelect.classList.add('form-select');
-    const response = await getAllEmployees();
-    const employees = response.content;
+    const employees = await getAllEmployees();
     employees.forEach((employee) => {
         const managerOpt = document.createElement('option');
         managerOpt.value = employee.employee_id;
@@ -396,3 +309,5 @@ const collectFormData = (form, old) => {
     old.location_id = form.location_id.value;
     return old;
 };
+
+export { renderDepartmentForm, renderDepartments };
