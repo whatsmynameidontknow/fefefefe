@@ -12,6 +12,8 @@ const dataTable = initDataTable('#departments-table');
 
 initDataTable();
 
+const managerIds = new Set();
+
 const departmentsContainer = document.querySelector('#departments-container');
 
 const renderDepartments = (
@@ -19,9 +21,13 @@ const renderDepartments = (
     departments = [],
     filterFunc = (department) => true
 ) => {
+    managerIds.clear();
     parentNode.innerHTML = '';
     dataTable.clear();
     departments.forEach((department) => {
+        if (department.manager) {
+            managerIds.add(department.manager.employee_id);
+        }
         if (filterFunc(department)) {
             const departmentRow = document.createElement('tr');
             departmentRow.classList.add('text-center');
@@ -211,7 +217,14 @@ const renderDepartmentForm = async (
             department.manager != null &&
             department.manager.employee_id == employee.employee_id
         ) {
-            managerOpt.setAttribute('selected', 'true');
+            managerOpt.selected = true;
+        }
+        if (
+            managerIds.has(employee.employee_id) &&
+            (!department.manager ||
+                department.manager.employee_id != employee.employee_id)
+        ) {
+            managerOpt.disabled = true;
         }
         managerSelect.appendChild(managerOpt);
     });
