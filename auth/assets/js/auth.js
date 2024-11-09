@@ -52,3 +52,11 @@ const getAllDepartments = async () => {
     const response = await fetch(BASE_DEPARTMENTS_URL);
     return await response.json();
 };
+
+const isAuthenticated = () => {
+    if (!checkLocalStorage()) {
+        throw new Error('local storage unavailable!');
+    }
+    const token = localStorage.getItem('token');
+    return token != null && token != '';
+};

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Employees</title>
+        <title>Jobs</title>
         <link
             rel="stylesheet"
             href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css"
@@ -17,10 +17,6 @@
         <style>
             h1 {
                 text-align: center;
-            }
-
-            #employee-modal td::before {
-                content: ': ';
             }
         </style>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -38,60 +34,23 @@
                 </div>
             </div>
         </nav>
-        <h1>List of All Employees</h1>
+        <h1><span id="employee-name"></span>'s Job History</h1>
         <div class="px-5">
             <table
-                id="employees-table"
+                id="job-history-table"
                 class="table table-striped table-bordered text-center"
             >
                 <thead>
                     <tr>
-                        <th>Employee ID</th>
-
-                        <th>Full Name</th>
-
-                        <th>Job Title</th>
-
                         <th>Department Name</th>
-
-                        <th>Action</th>
+                        <th>Job Title</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
                     </tr>
                 </thead>
 
-                <tbody id="employees-container"></tbody>
+                <tbody id="job-history-container"></tbody>
             </table>
-        </div>
-
-        <div
-            class="modal fade"
-            id="employee-modal"
-            tabindex="-1"
-            aria-hidden="true"
-        >
-            <div
-                class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
-            >
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1
-                            class="modal-title fs-5"
-                            id="employee-modal-label"
-                        ></h1>
-                        <button
-                            type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                    <div class="modal-body" id="employee-modal-content"></div>
-                    <div
-                        class="modal-footer d-flex justify-content-around"
-                        id="employee-modal-footer"
-                        hidden
-                    ></div>
-                </div>
-            </div>
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -102,17 +61,26 @@
             referrerpolicy="no-referrer"
         ></script>
         <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
-        <script src="assets/js/employees.js"></script>
+        <script src="assets/js/jobHistory.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 redirectUnauthenticated();
             });
             document.addEventListener('DOMContentLoaded', async () => {
-                const employees = await getAllEmployees();
-                const employeesContainer = document.querySelector(
-                    '#employees-container'
+                const queryParams = new URLSearchParams(window.location.search);
+                const employeeId = queryParams.get('employee_id');
+                const employeeName = document.querySelector('#employee-name');
+                const data = await getJobHistoryByEmployeeId(employeeId);
+                if (data.info.status === 404) {
+                    window.location.href = '/404.html';
+                    return;
+                }
+                const employee = data.content;
+                employeeName.innerHTML = `${employee.first_name} ${employee.last_name}`;
+                const jobHistoryContainer = document.querySelector(
+                    '#job-history-container'
                 );
-                renderEmployees(employeesContainer, employees);
+                renderJobHistory(jobHistoryContainer, employee.job_history);
             });
         </script>
     </body>

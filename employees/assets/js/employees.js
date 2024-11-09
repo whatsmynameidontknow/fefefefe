@@ -2,7 +2,6 @@ const checkLocalStorage = () => localStorage != null;
 
 let dataTable;
 const initDataTable = () => {
-    console.log('INITIALIZED');
     dataTable = new DataTable('#employees-table', {
         pageLength: 5,
         lengthMenu: [5, 10, 15],
@@ -38,7 +37,6 @@ const headers = {
 const employeesContainer = document.querySelector('#employees-container');
 
 const getAllEmployees = async () => {
-    redirectUnauthenticated();
     const response = await fetch(`${BASE_EMPLOYEES_URL}`, {
         headers: headers,
     });
@@ -50,7 +48,6 @@ const getAllEmployees = async () => {
 };
 
 const deleteEmployee = async (id) => {
-    redirectUnauthenticated();
     const response = await fetch(`${BASE_EMPLOYEES_URL}/${id}`, {
         method: 'DELETE',
         headers: headers,
@@ -60,7 +57,6 @@ const deleteEmployee = async (id) => {
 };
 
 const getEmployee = async (id) => {
-    redirectUnauthenticated();
     const response = await fetch(`${BASE_EMPLOYEES_URL}/${id}`, {
         headers: headers,
     });
@@ -69,7 +65,6 @@ const getEmployee = async (id) => {
 };
 
 const updateEmployee = async (newData) => {
-    redirectUnauthenticated();
     const response = await fetch(
         `${BASE_EMPLOYEES_URL}/${newData.employee_id}`,
         {
@@ -80,6 +75,28 @@ const updateEmployee = async (newData) => {
     );
     return await response.json();
 };
+
+class Pagination {
+    data;
+    perPage;
+    constructor(data, perPage) {
+        this.data = data;
+        this.perPage = perPage;
+    }
+
+    getPage(pageNum) {
+        const start = this.perPage * (pageNum - 1);
+        if (start > this.data.length || start < 0) {
+            throw new Error('invalid page');
+        }
+        const end = Math.min(start + this.perPage, this.data.length);
+        return this.data.slice(start, end);
+    }
+
+    getTotaLpage() {
+        return Math.floor(this.data.length / this.perPage);
+    }
+}
 
 const renderEmployees = (
     parentNode,
@@ -140,7 +157,6 @@ const renderEmployees = (
             dataTable.row.add(employeeRow);
         }
     });
-    console.log('Drawing Data table');
     dataTable.draw();
 };
 
@@ -200,13 +216,34 @@ const renderEmployeeDetail = async (parentNode, data) => {
     salaryContent.innerText = employee.salary ?? 'N/A';
     salaryRow.append(salaryLabel, salaryContent);
 
+    const hireDateRow = document.createElement('tr');
+    const hireDateLabel = document.createElement('th');
+    hireDateLabel.innerText = 'Hire Date';
+    const hireDateContent = document.createElement('td');
+    hireDateContent.innerText = employee.hire_date ?? 'N/A';
+    hireDateRow.append(hireDateLabel, hireDateContent);
+
+    const commissionPctRow = document.createElement('tr');
+    const commissionPctLabel = document.createElement('th');
+    commissionPctLabel.innerText = 'Commission Percentage';
+    const commissionPctContent = document.createElement('td');
+    if (employee.commission_pct) {
+        const commissionPctFloat = parseFloat(employee.commission_pct);
+        commissionPctContent.innerText = `${commissionPctFloat * 100}%`;
+    } else {
+        commissionPctContent.innerText = 'N/A';
+    }
+    commissionPctRow.append(commissionPctLabel, commissionPctContent);
+
     employeeTable.append(
         fullNameRow,
         emailRow,
         phoneNumberRow,
         jobTitleRow,
         departmentNameRow,
-        salaryRow
+        salaryRow,
+        hireDateRow,
+        commissionPctRow
     );
 
     const employeeModalFooter = document.querySelector(
@@ -245,7 +282,15 @@ const renderEmployeeDetail = async (parentNode, data) => {
         renderUpdateForm(employee);
     });
 
-    employeeModalFooter.append(editBtn, deleteBtn);
+    const jobHistoryBtn = document.createElement('button');
+    jobHistoryBtn.classList.add('btn', 'btn-success', 'col-md-12');
+    jobHistoryBtn.type = 'button';
+    jobHistoryBtn.innerText = 'View Job History';
+    jobHistoryBtn.addEventListener('click', () => {
+        window.location.href = `/job-history/index.html?employee_id=${employee.employee_id}`;
+    });
+
+    employeeModalFooter.append(editBtn, deleteBtn, jobHistoryBtn);
 
     parentNode.append(employeeTable);
 };
@@ -350,6 +395,7 @@ const renderUpdateForm = async (employee = {}) => {
     jobLabel.innerText = 'Job Title';
     const jobSelect = document.createElement('select');
     jobSelect.classList.add('form-select');
+    jobSelect.id = 'job';
     let response = await getAllJobs();
     const jobs = response.content;
     jobs.forEach((job) => {
@@ -371,6 +417,7 @@ const renderUpdateForm = async (employee = {}) => {
     departmentLabel.innerText = 'Department Name';
     const departmentSelect = document.createElement('select');
     departmentSelect.classList.add('form-select');
+    departmentSelect.id = 'department';
     response = await getAllDepartments();
     const departments = response.content;
     departments.forEach((department) => {
@@ -394,18 +441,55 @@ const renderUpdateForm = async (employee = {}) => {
     salaryInput.type = 'number';
     salaryInput.classList.add('form-control');
     salaryInput.id = 'salary';
+    salaryInput.min = 0;
     salaryInput.name = 'salary';
     salaryInput.value = employee.salary ?? 'N/A';
     salaryInput.setAttribute('required', 'true');
     salaryContainer.append(salaryLabel, salaryInput);
 
+    const commissionPctContainer = document.createElement('div');
+    commissionPctContainer.classList.add('mb-3');
+    const commissionPctLabel = document.createElement('label');
+    commissionPctLabel.setAttribute('for', 'commission_pct');
+    commissionPctLabel.classList.add('form-label');
+    commissionPctLabel.innerText = 'Commission Percentage';
+    const commissionPctInput = document.createElement('input');
+    commissionPctInput.type = 'number';
+    commissionPctInput.classList.add('form-control');
+    commissionPctInput.id = 'commission_pct';
+    commissionPctInput.name = 'commission_pct';
+    commissionPctInput.value = employee.commission_pct ?? '0';
+    commissionPctInput.setAttribute('min', '0');
+    commissionPctInput.setAttribute('max', '1');
+    commissionPctInput.setAttribute('step', '0.01');
+    commissionPctInput.setAttribute('required', 'true');
+    commissionPctContainer.append(commissionPctLabel, commissionPctInput);
+
+    const hireDateContainer = document.createElement('div');
+    hireDateContainer.classList.add('mb-3');
+    const hireDateLabel = document.createElement('label');
+    hireDateLabel.setAttribute('for', 'hire_date');
+    hireDateLabel.classList.add('form-label');
+    hireDateLabel.innerText = 'Hire Date';
+    const hireDateInput = document.createElement('input');
+    hireDateInput.type = 'date';
+    hireDateInput.classList.add('form-control');
+    hireDateInput.id = 'hire_date';
+    hireDateInput.name = 'hire_date';
+    hireDateInput.max = new Date().toISOString().split('T')[0];
+    hireDateInput.value = employee.hire_date ?? '';
+    hireDateInput.setAttribute('required', 'true');
+    hireDateContainer.append(hireDateLabel, hireDateInput);
+
     form.append(
         fullNameContainer,
         emailContainer,
         phoneNumberContainer,
+        hireDateContainer,
         jobContainer,
         departmentContainer,
-        salaryContainer
+        salaryContainer,
+        commissionPctContainer
     );
 
     modalContent.appendChild(form);
@@ -416,6 +500,10 @@ const renderUpdateForm = async (employee = {}) => {
     okBtn.classList.add('btn', 'btn-primary', 'col-md-5');
     okBtn.innerText = 'Update';
     okBtn.addEventListener('click', async () => {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
         employee = collectFormData(form, employee);
         const res = await updateEmployee(employee);
         const toast = createToast({
@@ -430,7 +518,7 @@ const renderUpdateForm = async (employee = {}) => {
         $(function () {
             $('#employee-modal').modal('toggle');
         });
-        renderEmployees(employeesContainer, await getAllEmployees());
+        renderEmployees(departmentContainer, await getAllEmployees());
     });
 
     const cancelBtn = document.createElement('button');
@@ -450,9 +538,11 @@ const collectFormData = (form, old) => {
     old.last_name = form.last_name.value;
     old.email = form.email.value;
     old.phone_number = form.phone_number.value;
-    old.job_id = form.job_id.value;
-    old.department_id = parseInt(form.department_id.value);
+    old.job_id = form.job.value;
+    old.department_id = parseInt(form.department.value);
     old.salary = parseInt(form.salary.value);
+    old.commission_pct = parseFloat(form.commission_pct.value);
+    old.hire_date = form.hire_date.value;
     return old;
 };
 
@@ -468,24 +558,10 @@ const getAllDepartments = async () => {
     return await response.json();
 };
 
-class Pagination {
-    data;
-    perPage;
-    constructor(data, perPage) {
-        this.data = data;
-        this.perPage = perPage;
+const logout = () => {
+    if (!checkLocalStorage()) {
+        throw new Error('local storage unavailable!');
     }
-
-    getPage(pageNum) {
-        const start = this.perPage * (pageNum - 1);
-        if (start > this.data.length) {
-            throw new Error('invalid page');
-        }
-        const end = Math.min(start + this.perPage, this.data.length);
-        return this.data.slice(start, end);
-    }
-
-    getTotaLpage() {
-        return Math.floor(this.data.length / this.perPage);
-    }
-}
+    localStorage.removeItem('token');
+    window.location.href = '/auth/login.html';
+};

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Employees</title>
+        <title>Jobs</title>
         <link
             rel="stylesheet"
             href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css"
@@ -19,13 +19,22 @@
                 text-align: center;
             }
 
-            #employee-modal td::before {
+            #job-modal td::before {
                 content: ': ';
             }
         </style>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container-fluid">
                 <a class="navbar-brand" href="../index.html">Home</a>
+                <div class="d-flex justify-content-center flex-grow-1">
+                    <button
+                        class="btn btn-success mx-3"
+                        type="button"
+                        id="create-job-btn"
+                    >
+                        Create Job
+                    </button>
+                </div>
                 <div class="ms-auto">
                     <button
                         class="btn btn-danger"
@@ -38,45 +47,32 @@
                 </div>
             </div>
         </nav>
-        <h1>List of All Employees</h1>
+        <h1>List of All Jobs</h1>
         <div class="px-5">
             <table
-                id="employees-table"
+                id="jobs-table"
                 class="table table-striped table-bordered text-center"
             >
                 <thead>
                     <tr>
-                        <th>Employee ID</th>
-
-                        <th>Full Name</th>
+                        <th>Job ID</th>
 
                         <th>Job Title</th>
-
-                        <th>Department Name</th>
-
                         <th>Action</th>
                     </tr>
                 </thead>
 
-                <tbody id="employees-container"></tbody>
+                <tbody id="jobs-container"></tbody>
             </table>
         </div>
 
-        <div
-            class="modal fade"
-            id="employee-modal"
-            tabindex="-1"
-            aria-hidden="true"
-        >
+        <div class="modal fade" id="job-modal" tabindex="-1" aria-hidden="true">
             <div
                 class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
             >
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h1
-                            class="modal-title fs-5"
-                            id="employee-modal-label"
-                        ></h1>
+                        <h1 class="modal-title fs-5" id="job-modal-label"></h1>
                         <button
                             type="button"
                             class="btn-close"
@@ -84,10 +80,10 @@
                             aria-label="Close"
                         ></button>
                     </div>
-                    <div class="modal-body" id="employee-modal-content"></div>
+                    <div class="modal-body" id="job-modal-content"></div>
                     <div
                         class="modal-footer d-flex justify-content-around"
-                        id="employee-modal-footer"
+                        id="job-modal-footer"
                         hidden
                     ></div>
                 </div>
@@ -102,17 +98,30 @@
             referrerpolicy="no-referrer"
         ></script>
         <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
-        <script src="assets/js/employees.js"></script>
+        <script src="assets/js/jobs.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 redirectUnauthenticated();
             });
             document.addEventListener('DOMContentLoaded', async () => {
-                const employees = await getAllEmployees();
-                const employeesContainer = document.querySelector(
-                    '#employees-container'
+                const jobs = await getAllJobs();
+                const jobsContainer = document.querySelector('#jobs-container');
+                renderJobs(jobsContainer, jobs);
+            });
+
+            const createBtn = document.querySelector('#create-job-btn');
+            createBtn.addEventListener('click', async () => {
+                $('#job-modal').modal('toggle');
+                renderJobForm(
+                    {},
+                    {
+                        label: 'Create Job',
+                        okLabel: 'Create',
+                        withCancel: false,
+                        okFunc: createJob,
+                        withId: true,
+                    }
                 );
-                renderEmployees(employeesContainer, employees);
             });
         </script>
     </body>
