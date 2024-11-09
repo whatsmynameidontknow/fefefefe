@@ -11,7 +11,7 @@ export const showToast = (toastId, { label, msg }) => {
     toast.style.zIndex = 999999;
     toast.setAttribute('role', 'alert');
     toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomice', 'true');
+    toast.setAttribute('aria-atomic', 'true');
     toast.innerHTML = `<div class="toast-header">
     <strong class="me-auto">${label}</strong>
     <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
