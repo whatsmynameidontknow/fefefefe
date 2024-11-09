@@ -18,7 +18,6 @@ const logout = () => {
         throw new Error('local storage unavailable!');
     }
     localStorage.removeItem('token');
-    console.log('DARI AUTH');
     window.location.href = '/auth/login.html';
 };
 

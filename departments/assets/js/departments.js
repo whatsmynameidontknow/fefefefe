@@ -44,7 +44,6 @@ const renderDepartments = (
             detailBtn.setAttribute('data-bs-target', '#department-modal');
             detailBtn.innerText = 'Detail';
             detailBtn.addEventListener('click', async () => {
-                console.log(`Querying ID ${department.department_id}`);
                 const departmentModalLabel = document.querySelector(
                     '#department-modal-label'
                 );
@@ -57,7 +56,6 @@ const renderDepartments = (
                     const res = await getDepartment(department.department_id);
                     renderDepartmentDetail(departmentModalContent, res);
                 } catch (e) {
-                    console.log(e);
                     departmentModalContent.innerText =
                         'failed to get department';
                 }

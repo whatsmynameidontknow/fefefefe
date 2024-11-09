@@ -33,7 +33,6 @@ const renderJobs = (parentNode, jobs = [], filterFunc = (job) => true) => {
             detailBtn.setAttribute('data-bs-target', '#job-modal');
             detailBtn.innerText = 'Detail';
             detailBtn.addEventListener('click', async () => {
-                console.log(`Querying ID ${job.job_id}`);
                 const jobModallabel =
                     document.querySelector('#job-modal-label');
                 jobModallabel.innerText = 'Job Detail';
@@ -44,7 +43,6 @@ const renderJobs = (parentNode, jobs = [], filterFunc = (job) => true) => {
                     const res = await getJob(job.job_id);
                     renderJobDetail(jobModalContent, res);
                 } catch (e) {
-                    console.log(e);
                     jobModalContent.innerText = 'failed to get job';
                 }
             });

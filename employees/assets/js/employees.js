@@ -42,7 +42,6 @@ const renderEmployees = (
             detailBtn.setAttribute('data-bs-target', '#employee-modal');
             detailBtn.innerText = 'Detail';
             detailBtn.addEventListener('click', async () => {
-                console.log(`Querying ID ${employee.employee_id}`);
                 const employeeModalLabel = document.querySelector(
                     '#employee-modal-label'
                 );
@@ -55,7 +54,6 @@ const renderEmployees = (
                     const res = await getEmployee(employee.employee_id);
                     renderEmployeeDetail(employeeModalContent, res);
                 } catch (e) {
-                    console.log(e);
                     employeeModalContent.innerText = 'failed to get employee';
                 }
             });
