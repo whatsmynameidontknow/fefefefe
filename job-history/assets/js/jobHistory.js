@@ -1,16 +1,8 @@
-let dataTable;
-const initDataTable = () => {
-    dataTable = new DataTable('#job-history-table', {
-        pageLength: 5,
-        order: [[3, 'desc']],
-        lengthMenu: [5, 10, 15],
-        language: {
-            emptyTable: 'No data available',
-        },
-    });
-};
+import { initDataTable } from '../../../assets/js/dataTable.js';
 
-initDataTable();
+const dataTable = initDataTable('#job-history-table', {
+    order: [[3, 'desc']],
+});
 
 const renderJobHistory = (
     parentNode,

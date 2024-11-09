@@ -5,17 +5,10 @@ import {
     getDepartment,
     updateDepartment,
 } from '../../../assets/js/api.js';
+import { initDataTable } from '../../../assets/js/dataTable.js';
+import { showToast } from '../../../assets/js/toast.js';
 
-let dataTable;
-const initDataTable = () => {
-    dataTable = new DataTable('#departments-table', {
-        pageLength: 5,
-        lengthMenu: [5, 10, 15],
-        language: {
-            emptyTable: 'No data available',
-        },
-    });
-};
+const dataTable = initDataTable('#departments-table');
 
 initDataTable();
 
@@ -137,13 +130,13 @@ const renderDepartmentDetail = async (parentNode, data) => {
     deleteBtn.addEventListener('click', async () => {
         if (window.confirm('Are you sure?')) {
             const res = await deleteDepartment(department.department_id);
-            const toast = createToast({
+            showToast('department-toast', {
                 label: 'Delete department',
-                msg: res.info.detailed_message,
-            });
-            document.body.appendChild(toast);
-            $(function () {
-                bootstrap.Toast.getOrCreateInstance(toast).show();
+                msg:
+                    res.info.detailed_message ??
+                    (res.info.status > 299
+                        ? 'Failed to perform operation!'
+                        : ''),
             });
             $(function () {
                 $('#department-modal').modal('toggle');
@@ -168,25 +161,6 @@ const renderDepartmentDetail = async (parentNode, data) => {
     departmentModalFooter.append(editBtn, deleteBtn);
 
     parentNode.append(departmentTable);
-};
-
-const createToast = ({ label, msg }) => {
-    const toast = document.createElement('div');
-    toast.classList.add('toast', 'position-absolute');
-    toast.style.bottom = '8%';
-    toast.style.right = '5%';
-    toast.id = 'department-toast';
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomice', 'true');
-    toast.innerHTML = `<div class="toast-header">
-    <strong class="me-auto">${label}</strong>
-    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-  </div>
-  <div class="toast-body">
-    ${msg}
-  </div>`;
-    return toast;
 };
 
 const renderDepartmentForm = async (
@@ -275,14 +249,11 @@ const renderDepartmentForm = async (
         }
         department = collectFormData(form, department);
         const res = await okFunc(department);
-        const toast = createToast({
+        showToast('department-toast', {
             label: label,
-            msg: res.info.detailed_message,
-        });
-        document.body.appendChild(toast);
-        document.body.appendChild(toast);
-        $(function () {
-            bootstrap.Toast.getOrCreateInstance(toast).show();
+            msg:
+                res.info.detailed_message ??
+                (res.info.status > 299 ? 'Failed to perform operation!' : ''),
         });
         $(function () {
             $('#department-modal').modal('toggle');

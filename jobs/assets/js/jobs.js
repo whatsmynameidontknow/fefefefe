@@ -4,16 +4,10 @@ import {
     getJob,
     updateJob,
 } from '../../../assets/js/api.js';
-let dataTable;
-const initDataTable = () => {
-    dataTable = new DataTable('#jobs-table', {
-        pageLength: 5,
-        lengthMenu: [5, 10, 15],
-        language: {
-            emptyTable: 'No data available',
-        },
-    });
-};
+import { initDataTable } from '../../../assets/js/dataTable.js';
+import { showToast } from '../../../assets/js/toast.js';
+
+const dataTable = initDataTable('#jobs-table');
 
 initDataTable();
 
@@ -117,7 +111,7 @@ const renderJobDetail = async (parentNode, data) => {
     deleteBtn.addEventListener('click', async () => {
         if (window.confirm('Are you sure?')) {
             const res = await deleteJob(job.job_id);
-            showToast({
+            showToast('job-toast', {
                 label: 'Delete job',
                 msg:
                     res.info.detailed_message ??
@@ -148,33 +142,6 @@ const renderJobDetail = async (parentNode, data) => {
     jobModaLFooter.append(editBtn, deleteBtn);
 
     parentNode.append(jobTable);
-};
-
-const showToast = ({ label, msg }) => {
-    let toast;
-    toast = document.querySelector('#job-toast');
-    if (!toast) {
-        toast = document.createElement('div');
-    }
-    toast.classList.add('toast', 'position-absolute');
-    toast.style.bottom = '8%';
-    toast.style.right = '5%';
-    toast.id = 'job-toast';
-    toast.style.zIndex = 999999;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomice', 'true');
-    toast.innerHTML = `<div class="toast-header">
-    <strong class="me-auto">${label}</strong>
-    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-  </div>
-  <div class="toast-body">
-    ${msg}
-  </div>`;
-    document.body.appendChild(toast);
-    $(function () {
-        bootstrap.Toast.getOrCreateInstance(toast).show();
-    });
 };
 
 const renderJobForm = async (
@@ -267,7 +234,7 @@ const renderJobForm = async (
             return;
         }
         if (parseInt(maxSalaryInput.value) < parseInt(minSalaryInput.value)) {
-            showToast({
+            showToast('job-toast', {
                 label: 'Create Job',
                 msg: "Max salary can't be less than min salary!",
             });
@@ -275,8 +242,7 @@ const renderJobForm = async (
         }
         job = collectFormData(form, job);
         const res = await okFunc(job);
-        console.log(JSON.stringify(res));
-        showToast({
+        showToast('job-toast', {
             label: label,
             msg:
                 res.info.detailed_message ??
