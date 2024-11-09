@@ -4,7 +4,7 @@ export const showToast = (toastId, { label, msg }) => {
     if (!toast) {
         toast = document.createElement('div');
     }
-    toast.classList.add('toast', 'position-absolute');
+    toast.classList.add('toast', 'position-fixed');
     toast.style.bottom = '8%';
     toast.style.right = '5%';
     toast.id = toastId;

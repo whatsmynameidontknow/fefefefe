@@ -167,13 +167,16 @@
                     Already have an account?
                     <a href="/auth/login.html" class="text-blue">Login here</a>
                 </p>
-                <span
-                    id="register-status"
-                    class="mt-3 d-block text-center"
-                ></span>
             </div>
         </div>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+            integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        ></script>
         <script type="module">
             import {
                 populateJobList,
@@ -181,6 +184,7 @@
                 isAuthenticated,
             } from './assets/js/auth.js';
             import { register } from '../../../assets/js/api.js';
+            import { showToast } from '../../../assets/js/toast.js';
             document.addEventListener('DOMContentLoaded', async () => {
                 const jobList = document.querySelector('#job-list');
                 populateJobList(jobList);
@@ -204,8 +208,6 @@
                 .querySelector('#registerForm')
                 .addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const registerStatus =
-                        document.querySelector('#register-status');
                     const firstName =
                         document.querySelector('#first-name').value;
                     const lastName = document.querySelector('#last-name').value;
@@ -232,14 +234,25 @@
                         department_id: departmentId,
                         password,
                     };
-                    if (await register(employee)) {
-                        registerStatus.innerText = 'registration successful!';
-                        registerStatus.style.color = 'green';
-                        window.location.href = '/auth/login.html';
-                    } else {
-                        registerStatus.innerText = 'registration failed!';
-                        registerStatus.style.color = 'red';
+                    const res = await register(employee);
+                    if (res.info.status === 201) {
+                        showToast('register-toast', {
+                            label: 'Register',
+                            msg: 'Registration successful!',
+                        });
+                        setTimeout(() => {
+                            window.location.href = '/auth/login.html';
+                        }, 1000);
+                        return;
                     }
+                    showToast('register-toast', {
+                        label: 'Register',
+                        msg:
+                            res.info.detailed_message ??
+                            (res.info.status === 422
+                                ? JSON.stringify(res.content)
+                                : 'Failed to perform operation!'),
+                    });
                 });
         </script>
     </body>

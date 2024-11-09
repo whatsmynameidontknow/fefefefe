@@ -7,9 +7,16 @@ import {
 
 const checkLocalStorage = () => localStorage != null;
 
-const authHeaders = {
+const unprotectedHeaders = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
+};
+
+const removeToken = () => {
+    if (!checkLocalStorage()) {
+        throw new Error('local storage not available!');
+    }
+    localStorage.removeItem('token');
 };
 
 const getToken = () => {
@@ -19,8 +26,8 @@ const getToken = () => {
     return localStorage.getItem('token');
 };
 
-const headers = {
-    ...authHeaders,
+const protectedHeaders = {
+    ...unprotectedHeaders,
     Authorization: `Bearer ${getToken()}`,
 };
 
@@ -30,38 +37,36 @@ const login = async (email, password) => {
     }
 
     const response = await fetch(`${BASE_AUTH_URL}/login`, {
-        headers: authHeaders,
+        headers: unprotectedHeaders,
         body: JSON.stringify({
             email: email,
             password: password,
         }),
         method: 'POST',
     });
-    if (response.ok) {
-        localStorage.setItem('token', (await response.json()).content.token);
-        return true;
-    }
-    return false;
+
+    return await response.json();
 };
 
 const register = async (data) => {
     const response = await fetch(`${BASE_AUTH_URL}/register`, {
-        headers: authHeaders,
+        headers: unprotectedHeaders,
         method: 'POST',
         body: JSON.stringify(data),
     });
-    if (response.ok) {
-        return true;
-    }
-    return false;
+
+    return await response.json();
 };
 
 const getAllEmployees = async () => {
     const response = await fetch(`${BASE_EMPLOYEES_URL}`, {
-        headers: headers,
+        headers: protectedHeaders,
     });
     if (response.ok) {
         return (await response.json()).content;
+    }
+    if (response.status === 403) {
+        removeToken();
     }
 
     return [];
@@ -70,8 +75,11 @@ const getAllEmployees = async () => {
 const deleteEmployee = async (id) => {
     const response = await fetch(`${BASE_EMPLOYEES_URL}/${id}`, {
         method: 'DELETE',
-        headers: headers,
+        headers: protectedHeaders,
     });
+    if (response.status === 403) {
+        removeToken();
+    }
 
     return await response.json();
 };
@@ -80,9 +88,12 @@ const getEmployee = async (id, includeJobhistory = false) => {
     const response = await fetch(
         `${BASE_EMPLOYEES_URL}/${id}?include_job_history=${includeJobhistory}`,
         {
-            headers: headers,
+            headers: protectedHeaders,
         }
     );
+    if (response.status === 403) {
+        removeToken();
+    }
 
     return await response.json();
 };
@@ -91,17 +102,21 @@ const updateEmployee = async (newData) => {
     const response = await fetch(
         `${BASE_EMPLOYEES_URL}/${newData.employee_id}`,
         {
-            headers: headers,
+            headers: protectedHeaders,
             body: JSON.stringify(newData),
             method: 'PATCH',
         }
     );
+    if (response.status === 403) {
+        removeToken();
+    }
+
     return await response.json();
 };
 
 const getAllDepartments = async () => {
     const response = await fetch(`${BASE_DEPARTMENTS_URL}`, {
-        headers: headers,
+        headers: unprotectedHeaders,
     });
     if (response.ok) {
         return (await response.json()).content;
@@ -113,15 +128,18 @@ const getAllDepartments = async () => {
 const deleteDepartment = async (id) => {
     const response = await fetch(`${BASE_DEPARTMENTS_URL}/${id}`, {
         method: 'DELETE',
-        headers: headers,
+        headers: protectedHeaders,
     });
+    if (response.status === 403) {
+        removeToken();
+    }
 
     return await response.json();
 };
 
 const getDepartment = async (id) => {
     const response = await fetch(`${BASE_DEPARTMENTS_URL}/${id}`, {
-        headers: headers,
+        headers: unprotectedHeaders,
     });
 
     return await response.json();
@@ -131,27 +149,34 @@ const updateDepartment = async (newData) => {
     const response = await fetch(
         `${BASE_DEPARTMENTS_URL}/${newData.department_id}`,
         {
-            headers: headers,
+            headers: protectedHeaders,
             body: JSON.stringify(newData),
             method: 'PATCH',
         }
     );
+    if (response.status === 403) {
+        removeToken();
+    }
+
     return await response.json();
 };
 
 const createDepartment = async (data) => {
     const response = await fetch(BASE_DEPARTMENTS_URL, {
-        headers: headers,
+        headers: protectedHeaders,
         method: 'POST',
         body: JSON.stringify(data),
     });
+    if (response.status === 403) {
+        removeToken();
+    }
+
     return await response.json();
-    // return null;
 };
 
 const getAllJobs = async () => {
     const response = await fetch(`${BASE_JOBS_URL}`, {
-        headers: headers,
+        headers: unprotectedHeaders,
     });
     if (response.ok) {
         return (await response.json()).content;
@@ -163,15 +188,18 @@ const getAllJobs = async () => {
 const deleteJob = async (id) => {
     const response = await fetch(`${BASE_JOBS_URL}/${id}`, {
         method: 'DELETE',
-        headers: headers,
+        headers: protectedHeaders,
     });
+    if (response.status === 403) {
+        removeToken();
+    }
 
     return await response.json();
 };
 
 const getJob = async (id) => {
     const response = await fetch(`${BASE_JOBS_URL}/${id}`, {
-        headers: headers,
+        headers: unprotectedHeaders,
     });
 
     return await response.json();
@@ -179,19 +207,27 @@ const getJob = async (id) => {
 
 const updateJob = async (newData) => {
     const response = await fetch(`${BASE_JOBS_URL}/${newData.job_id}`, {
-        headers: headers,
+        headers: protectedHeaders,
         body: JSON.stringify(newData),
         method: 'PATCH',
     });
+    if (response.status === 403) {
+        removeToken();
+    }
+
     return await response.json();
 };
 
 const createJob = async (data) => {
     const response = await fetch(BASE_JOBS_URL, {
-        headers: headers,
+        headers: protectedHeaders,
         method: 'POST',
         body: JSON.stringify(data),
     });
+    if (response.status === 403) {
+        removeToken();
+    }
+
     return await response.json();
 };
 

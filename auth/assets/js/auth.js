@@ -13,6 +13,13 @@ const isAuthenticated = () => {
     return token != null && token != '';
 };
 
+const setToken = (token) => {
+    if (!checkLocalStorage()) {
+        throw new Error('local storage unavailable!');
+    }
+    localStorage.setItem('token', token);
+};
+
 const logout = () => {
     if (!checkLocalStorage()) {
         throw new Error('local storage unavailable!');
@@ -53,4 +60,5 @@ export {
     populateDepartmentList,
     populateJobList,
     redirectUnauthenticated,
+    setToken,
 };
